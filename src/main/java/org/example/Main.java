@@ -4,37 +4,79 @@ import org.example.models.Book;
 import org.example.database.BookDAO;
 import org.example.database.DatabaseConfig;
 import java.util.List;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        // Извикваме инициализацията още при стартиране
         DatabaseConfig.initializeDatabase();
-
-        // 2. Създаваме обект Book (нашето Java представяне)
-        // Използваме 0 за ID, защото базата автоматично ще му даде номер
-        Book newBook = new Book(0, "Под игото", "Иван Вазов", "978-954", true);
-
-        // 3. Използваме BookDAO, за да пратим обекта към базата
         BookDAO bookDAO = new BookDAO();
-        bookDAO.addBook(newBook);
+        Scanner scanner = new Scanner(System.in);
+        boolean running = true;
 
-        // 4. Извличаме всички книги, които вече са записани в library.db
-        List<Book> library = bookDAO.getAllBooks();
+        System.out.println("=== БИБЛИОТЕЧНА СИСТЕМА УПРАВЛЕНИЕ ===");
 
-        // 5. Принтираме резултата в конзолата
-        System.out.println("\n--- ТЕКУЩ СПИСЪК С КНИГИ ---");
-        if (library.isEmpty()) {
-            System.out.println("Библиотеката е празна.");
-        } else {
-            for (Book b : library) {
-                System.out.println("ID: " + b.getId() +
-                        " | Заглавие: " + b.getTitle() +
-                        " | Автор: " + b.getAuthor() +
-                        " | Налична: " + (b.isAvailable() ? "Да" : "Не"));
+        while (running) {
+            System.out.println("\nИзберете опция:");
+            System.out.println("1. Виж всички налични книги");
+            System.out.println("2. Добави нова книга");
+            System.out.println("3. Изтриване");
+            System.out.println("4. Изход");
+            System.out.print("Вашият избор: ");
+
+            if (!scanner.hasNextInt()) {
+                String invalidInput = scanner.next(); // Взимаме грешния вход (напр. "ч")
+                System.out.println("⚠️ Грешка: '" + invalidInput + "' не е валидно число! Моля, изберете 1, 2 или 3.");
+                continue; // Връщаме се в началото на цикъла
+            }
+
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Изчистваме буфера
+
+            switch (choice) {
+                case 1:
+                    // ТОВА ОСТАВА: Логиката за извличане на списъка
+                    List<Book> books = bookDAO.getAllBooks();
+                    System.out.println("\n--- НАЛИЧНИ КНИГИ ---");
+                    if (books.isEmpty()) {
+                        System.out.println("Няма намерени книги.");
+                    } else {
+                        for (Book b : books) {
+                            System.out.println("ID: " + b.getId() + " | " + b.getTitle() + " - " + b.getAuthor());
+                        }
+                    }
+                    break;
+
+                case 2:
+                    // ТОВА СЕ ПРОМЕНЯ: Вече не е твърдо написано, а чете от теб
+                    System.out.print("Заглавие: ");
+                    String title = scanner.nextLine();
+                    System.out.print("Автор: ");
+                    String author = scanner.nextLine();
+
+                    bookDAO.addBook(new Book(0, title, author, "ISBN-123", true));
+                    break;
+
+                case 3:
+                    // НОВАТА ОПЦИЯ: Изтриване
+                    System.out.print("Въведете ID на книгата за изтриване: ");
+                    if (scanner.hasNextInt()) {
+                        int id = scanner.nextInt();
+                        bookDAO.deleteBook(id);
+                    } else {
+                        System.out.println("⚠️ Невалидно ID!");
+                        scanner.next();
+                    }
+                    break;
+
+                case 4:
+                    running = false;
+                    System.out.println("👋 Довиждане!");
+                    break;
+
+                default:
+                    System.out.println("⚠️ Няма такава опция.");
             }
         }
-
-        System.out.println("----------------------------");
-        System.out.println("Програмата приключи успешно!");
+        scanner.close();
     }
 }
