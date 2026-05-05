@@ -75,5 +75,40 @@ public class BookDAO {
         }
         return books;
     }
+    public List<Book> searchBookByTitle(String searchTerm){
+        List<Book> allBooks = getAllBooks();
+        List<Book> filteredBooks = new ArrayList<>();
 
+        String searchLower = searchTerm.toLowerCase().trim();
+
+        for (Book book : allBooks) {
+
+            if (book.getTitle().toLowerCase().contains(searchLower)) {
+                filteredBooks.add(book);
+            }
+        }
+
+        return filteredBooks;
+    }
+
+    public void updateBook(int id,String newTitle,String newAuthor) {
+        String sql  = "UPDATE books SET title = ?, author = ? WHERE id = ?";
+
+        try(Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1,newTitle);
+            pstmt.setString(2,newAuthor);
+            pstmt.setInt(3,id);
+
+            int affectedRows = pstmt.executeUpdate();
+            if(affectedRows > 0){
+                System.out.printf("✅ Книгата с ID %d беше обновена успешно!%n",id);
+            } else {
+                System.out.println("⚠ Не беше намерена книга с ID " + id + ".");
+            }
+        }catch (SQLException e){
+            System.out.println("❌ Грешка при редакцията:" + e.getMessage());
+        }
+    }
 }

@@ -20,7 +20,9 @@ public class Main {
             System.out.println("1. Виж всички налични книги");
             System.out.println("2. Добави нова книга");
             System.out.println("3. Изтриване");
-            System.out.println("4. Изход");
+            System.out.println("4. Търсене");
+            System.out.println("5. Редактор");
+            System.out.println("6. Изход");
             System.out.print("Вашият избор: ");
 
             if (!scanner.hasNextInt()) {
@@ -57,21 +59,56 @@ public class Main {
                     break;
 
                 case 3:
-                    // НОВАТА ОПЦИЯ: Изтриване
+
                     System.out.print("Въведете ID на книгата за изтриване: ");
                     if (scanner.hasNextInt()) {
                         int id = scanner.nextInt();
+                        scanner.nextLine();
                         bookDAO.deleteBook(id);
                     } else {
                         System.out.println("⚠️ Невалидно ID!");
                         scanner.next();
                     }
                     break;
-
                 case 4:
+                    System.out.println("Въведете заглавие или част от него за търсене: ");
+                    String searchTerm = scanner.nextLine();
+                    List<Book> foundBook = bookDAO.searchBookByTitle(searchTerm);
+                    if(searchTerm.isEmpty()) {
+                        System.out.println("⚠️ Моля, въведете дума за търсене.");
+                        break;
+                    }
+                    System.out.println("\n--- РЕЗУЛТАТИ ОТ ТЪРСЕНЕТО ---\n");
+                    if(foundBook.isEmpty()){
+                        System.out.println("Няма намерени книги, съвпадащи с: " + searchTerm);
+                    }else{
+                        for(Book b : foundBook){
+                            System.out.println("ID: " + b.getId() + " | " + b.getTitle() + " (" +
+                                    b.getAuthor() + ") ");
+                        }
+                    }
+                    break;
+                case 5:
+                    System.out.println("Въведете ID на книгата за редакция: ");
+                    if(scanner.hasNextInt()){
+                        int updateId = scanner.nextInt();
+                        scanner.nextLine();
+
+                        System.out.println("Ново заглавие: ");
+                        String newTitle = scanner.nextLine();
+                        System.out.println("Нов автор: ");
+                        String newAuthor = scanner.nextLine();
+
+                        bookDAO.updateBook(updateId, newTitle, newAuthor);
+                    }else {
+                        System.out.println("⚠ Невалидно ID!");
+                        scanner.next();
+                    }break;
+                case 6:
                     running = false;
                     System.out.println("👋 Довиждане!");
                     break;
+
 
                 default:
                     System.out.println("⚠️ Няма такава опция.");
