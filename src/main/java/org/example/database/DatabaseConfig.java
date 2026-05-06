@@ -23,7 +23,7 @@ public class DatabaseConfig {
                 "title TEXT NOT NULL," +
                 "author TEXT NOT NULL," +
                 "isbn TEXT," +
-                "isAvailable BOOLEAN DEFAULT 1" +
+                "isAvailable INTEGER DEFAULT 1" +
                 ");";
 
 

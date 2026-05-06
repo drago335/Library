@@ -22,7 +22,9 @@ public class Main {
             System.out.println("3. Delete");
             System.out.println("4. Search");
             System.out.println("5. Editor");
-            System.out.println("6. Exit");
+            System.out.println("6. Borrow a book");
+            System.out.println("7. Return a book");
+            System.out.println("8. Exit");
             System.out.print("Your choice: ");
 
             if (!scanner.hasNextInt()) {
@@ -43,7 +45,12 @@ public class Main {
                         System.out.println("Няма намерени книги.");
                     } else {
                         for (Book b : books) {
-                            System.out.println("ID: " + b.getId() + " | " + b.getTitle() + " - " + b.getAuthor());
+                            String statusText = b.isAvailable() ? "[Available]" : "[Borrowed]";
+                            System.out.println("ID: " + b.getId() +
+                                                " | " + b.getTitle() +
+                                                " - " + b.getAuthor() +
+                                                " | ISBN: " + b.getIsbn() +
+                                                " | Status: " + statusText);
                         }
                     }
                     break;
@@ -54,8 +61,10 @@ public class Main {
                     String title = scanner.nextLine();
                     System.out.print("Author: ");
                     String author = scanner.nextLine();
+                    System.out.print("ISBN: ");
+                    String isbn = scanner.nextLine();
 
-                    bookDAO.addBook(new Book(0, title, author, "ISBN-123", true));
+                    bookDAO.addBook(new Book(0, title, author, isbn, true));
                     break;
 
                 case 3:
@@ -105,6 +114,43 @@ public class Main {
                         scanner.next();
                     }break;
                 case 6:
+                    System.out.print("Enter Book ID to borrow: ");
+                    if (scanner.hasNextInt()) {
+                        int borrowId = scanner.nextInt();
+                        scanner.nextLine(); // Clear new row
+
+                        Book bookToBorrow = bookDAO.getBookById(borrowId);
+
+                        if (bookToBorrow == null) {
+                            System.out.println("⚠️ No book found with ID " + borrowId + ".");
+                        }
+                        // 2. Проверяваме дали вече е заета
+                        else if (!bookToBorrow.isAvailable()) {
+                            System.out.println("❌ Съжаляваме, тази книга вече е заета!");
+                        }
+                        // 3. Ако е свободна, я заемаме
+                        else {
+                            bookDAO.updateBookAvailability(borrowId, false);
+                        }
+                    }
+                    break;
+                case 7:
+                    System.out.print("Enter Book ID to return: ");
+                    if (scanner.hasNextInt()) {
+                        int returnId = scanner.nextInt();
+                        scanner.nextLine(); // Clear new row
+                        Book bookToReturn = bookDAO.getBookById(returnId);
+
+                        if (bookToReturn == null) {
+                            System.out.println("⚠️ No book found with ID " + returnId + ".");
+                        } else if (bookToReturn.isAvailable()) {
+                            System.out.println("ℹ️ Тази книга вече е в библиотеката (не е била заемана).");
+                        } else {
+                            bookDAO.updateBookAvailability(returnId, true);
+                        }
+                    }
+                    break;
+                case 8:
                     running = false;
                     System.out.println("👋 Goodbye!");
                     break;

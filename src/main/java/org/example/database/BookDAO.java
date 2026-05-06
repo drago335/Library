@@ -111,4 +111,46 @@ public class BookDAO {
             System.out.println("❌ Edit error / Error during editing:" + e.getMessage());
         }
     }
+    public void updateBookAvailability(int id, boolean available) {
+        String sql = "UPDATE books SET isAvailable = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setBoolean(1, available);
+            pstmt.setInt(2, id);
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                String action = available ? "returned" : "borrowed";
+                System.out.println("✅ Book with ID " + id + " was successfully " + action + "!");
+            } else {
+                System.out.println("⚠️ No book found with ID " + id + ".");
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Error updating status: " + e.getMessage());
+        }
+    }
+    public Book getBookById(int id) {
+        String sql = "SELECT * FROM books WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new Book(
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("author"),
+                        rs.getString("isbn"),
+                        rs.getBoolean("isAvailable")
+                );
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Error finding book: " + e.getMessage());
+        }
+        return null; // If book not exist
+    }
 }
