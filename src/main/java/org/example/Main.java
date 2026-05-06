@@ -13,30 +13,30 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
 
-        System.out.println("=== БИБЛИОТЕЧНА СИСТЕМА УПРАВЛЕНИЕ ===");
+        System.out.println("=== LIBRARY SYSTEM ===");
 
         while (running) {
-            System.out.println("\nИзберете опция:");
-            System.out.println("1. Виж всички налични книги");
-            System.out.println("2. Добави нова книга");
-            System.out.println("3. Изтриване");
-            System.out.println("4. Търсене");
-            System.out.println("5. Редактор");
-            System.out.println("6. Изход");
-            System.out.print("Вашият избор: ");
+            System.out.println("\nChose option:");
+            System.out.println("1. View all available books");
+            System.out.println("2. Add a new book");
+            System.out.println("3. Delete");
+            System.out.println("4. Search");
+            System.out.println("5. Editor");
+            System.out.println("6. Exit");
+            System.out.print("Your choice: ");
 
             if (!scanner.hasNextInt()) {
-                String invalidInput = scanner.next(); // Взимаме грешния вход (напр. "ч")
-                System.out.println("⚠️ Грешка: '" + invalidInput + "' не е валидно число! Моля, изберете 1, 2 или 3.");
-                continue; // Връщаме се в началото на цикъла
+                String invalidInput = scanner.next(); // Handling invalid input (e.g., "ch")
+                System.out.println("⚠️ Wrong: '" + invalidInput + "' is not a valid number! Please choose 1, 2, or 3");
+                continue; // Returning to the start of the loop
             }
 
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Изчистваме буфера
+            scanner.nextLine(); // Clearing the buffer
 
             switch (choice) {
                 case 1:
-                    // ТОВА ОСТАВА: Логиката за извличане на списъка
+                    // THIS REMAINS: The logic for retrieving the list
                     List<Book> books = bookDAO.getAllBooks();
                     System.out.println("\n--- НАЛИЧНИ КНИГИ ---");
                     if (books.isEmpty()) {
@@ -49,10 +49,10 @@ public class Main {
                     break;
 
                 case 2:
-                    // ТОВА СЕ ПРОМЕНЯ: Вече не е твърдо написано, а чете от теб
-                    System.out.print("Заглавие: ");
+                    // THIS CHANGES: It is no longer hardcoded; it reads from your input
+                    System.out.print("Title: ");
                     String title = scanner.nextLine();
-                    System.out.print("Автор: ");
+                    System.out.print("Author: ");
                     String author = scanner.nextLine();
 
                     bookDAO.addBook(new Book(0, title, author, "ISBN-123", true));
@@ -60,27 +60,27 @@ public class Main {
 
                 case 3:
 
-                    System.out.print("Въведете ID на книгата за изтриване: ");
+                    System.out.print("Enter the book ID to delete: ");
                     if (scanner.hasNextInt()) {
                         int id = scanner.nextInt();
                         scanner.nextLine();
                         bookDAO.deleteBook(id);
                     } else {
-                        System.out.println("⚠️ Невалидно ID!");
+                        System.out.println("⚠️ Invalid ID!");
                         scanner.next();
                     }
                     break;
                 case 4:
-                    System.out.println("Въведете заглавие или част от него за търсене: ");
+                    System.out.println("Enter a title or part of it to search: ");
                     String searchTerm = scanner.nextLine();
                     List<Book> foundBook = bookDAO.searchBookByTitle(searchTerm);
                     if(searchTerm.isEmpty()) {
-                        System.out.println("⚠️ Моля, въведете дума за търсене.");
+                        System.out.println("⚠️ Please enter a search term.");
                         break;
                     }
-                    System.out.println("\n--- РЕЗУЛТАТИ ОТ ТЪРСЕНЕТО ---\n");
+                    System.out.println("\n--- SEARCH RESULTS ---\n");
                     if(foundBook.isEmpty()){
-                        System.out.println("Няма намерени книги, съвпадащи с: " + searchTerm);
+                        System.out.println("No books found matching: " + searchTerm);
                     }else{
                         for(Book b : foundBook){
                             System.out.println("ID: " + b.getId() + " | " + b.getTitle() + " (" +
@@ -89,29 +89,29 @@ public class Main {
                     }
                     break;
                 case 5:
-                    System.out.println("Въведете ID на книгата за редакция: ");
+                    System.out.println("Enter the book ID to edit: ");
                     if(scanner.hasNextInt()){
                         int updateId = scanner.nextInt();
                         scanner.nextLine();
 
-                        System.out.println("Ново заглавие: ");
+                        System.out.println("New Title: ");
                         String newTitle = scanner.nextLine();
-                        System.out.println("Нов автор: ");
+                        System.out.println("New Author: ");
                         String newAuthor = scanner.nextLine();
 
                         bookDAO.updateBook(updateId, newTitle, newAuthor);
                     }else {
-                        System.out.println("⚠ Невалидно ID!");
+                        System.out.println("⚠ Invalid ID!");
                         scanner.next();
                     }break;
                 case 6:
                     running = false;
-                    System.out.println("👋 Довиждане!");
+                    System.out.println("👋 Goodbye!");
                     break;
 
 
                 default:
-                    System.out.println("⚠️ Няма такава опция.");
+                    System.out.println("⚠️ Invalid option / No such option.");
             }
         }
         scanner.close();

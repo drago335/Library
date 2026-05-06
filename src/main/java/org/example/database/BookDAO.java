@@ -27,10 +27,10 @@ public class BookDAO {
 
             // Изпълняваме записа
             pstmt.executeUpdate();
-            System.out.println("✅ Книгата '" + book.getTitle() + "' е записана успешно!");
+            System.out.println("✅ Book '" + book.getTitle() + "' has been saved successfully!");
 
         } catch (SQLException e) {
-            System.out.println("❌ Грешка при запис: " + e.getMessage());
+            System.out.println("❌ Error saving / Save error: " + e.getMessage());
         }
     }
     public void deleteBook(int id) {
@@ -43,13 +43,13 @@ public class BookDAO {
             int affectedRows = pstmt.executeUpdate();
 
             if (affectedRows > 0) {
-                System.out.println("✅ Книгата с ID " + id + " беше изтрита успешно!");
+                System.out.println("✅ Book with ID " + id + " was deleted successfully!");
             } else {
-                System.out.println("⚠️ Не беше намерена книга с ID " + id + ".");
+                System.out.println("⚠️ No found book with ID " + id + ".");
             }
 
         } catch (SQLException e) {
-            System.out.println("❌ Грешка при изтриване от базата: " + e.getMessage());
+            System.out.println("❌ Error deleting from the database: " + e.getMessage());
         }
     }
     public List<Book> getAllBooks() {
@@ -71,7 +71,7 @@ public class BookDAO {
                 books.add(book);
             }
         } catch (SQLException e) {
-            System.out.println("❌ Грешка при четене: " + e.getMessage());
+            System.out.println("❌ Reading error / Error while reading: " + e.getMessage());
         }
         return books;
     }
@@ -103,12 +103,12 @@ public class BookDAO {
 
             int affectedRows = pstmt.executeUpdate();
             if(affectedRows > 0){
-                System.out.printf("✅ Книгата с ID %d беше обновена успешно!%n",id);
+                System.out.printf("✅ The book with ID %d was updated successfully!%n",id);
             } else {
-                System.out.println("⚠ Не беше намерена книга с ID " + id + ".");
+                System.out.println("⚠ No book was found with ID " + id + ".");
             }
         }catch (SQLException e){
-            System.out.println("❌ Грешка при редакцията:" + e.getMessage());
+            System.out.println("❌ Edit error / Error during editing:" + e.getMessage());
         }
     }
 }

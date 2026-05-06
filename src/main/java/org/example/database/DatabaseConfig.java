@@ -31,10 +31,10 @@ public class DatabaseConfig {
              Statement stmt = conn.createStatement()) {
 
             stmt.execute(sql);
-            System.out.println("✅ Базата данни и таблицата са готови!");
+            System.out.println("✅ The database and table are ready!");
 
         } catch (SQLException e) {
-            System.out.println("❌ Грешка при създаване на базата: " + e.getMessage());
+            System.out.println("❌ Error creating the database: " + e.getMessage());
         }
     }
 }
