@@ -51,7 +51,9 @@ public class Main {
                         System.out.println("No found books.");
                     } else {
                         for (Book b : books) {
-                            String statusText = b.isAvailable() ? "[Available]" : "[Borrowed]";
+                            String borrowerName = b.getBorrowedByUserName();
+                            String statusText = b.isAvailable() ? "[Available]" : "[Borrowed] by User : " +
+                                    (borrowerName != null ? borrowerName : "Unknown User");
 
                             String dateInfo = "";
                             if (!b.isAvailable() && b.getBorrowedDate() != null) {
@@ -62,6 +64,7 @@ public class Main {
                                     " - " + b.getAuthor() +
                                     " | ISBN: " + b.getIsbn() +
                                     " | Status: " + statusText + dateInfo);
+
                         }
                     }
                     break;
@@ -129,20 +132,24 @@ public class Main {
                     System.out.print("Enter Book ID to borrow: ");
                     if (scanner.hasNextInt()) {
                         int borrowId = scanner.nextInt();
-                        scanner.nextLine(); // Clear new row
+                        scanner.nextLine();
 
                         Book bookToBorrow = bookDAO.getBookById(borrowId);
 
                         if (bookToBorrow == null) {
-                            System.out.println("⚠️ No book found with ID " + borrowId + ".");
-                        }
-                        // 2. Проверяваме дали вече е заета
-                        else if (!bookToBorrow.isAvailable()) {
-                            System.out.println("❌ Съжаляваме, тази книга вече е заета!");
-                        }
-                        // 3. Ако е свободна, я заемаме
-                        else {
-                            bookDAO.updateBookAvailability(borrowId, false);
+                            System.out.println("⚠️ Book not found.");
+                        } else if (!bookToBorrow.isAvailable()) {
+                            System.out.println("❌ Book is already borrowed.");
+                        } else {
+
+                            System.out.print("Enter User ID: ");
+                            if (scanner.hasNextInt()) {
+                                int uId = scanner.nextInt();
+                                scanner.nextLine();
+
+
+                                bookDAO.updateBookAvailability(borrowId, false, uId);
+                            }
                         }
                     }
                     break;
@@ -158,7 +165,7 @@ public class Main {
                         } else if (bookToReturn.isAvailable()) {
                             System.out.println("ℹ️ Тази книга вече е в библиотеката (не е била заемана).");
                         } else {
-                            bookDAO.updateBookAvailability(returnId, true);
+                            bookDAO.updateBookAvailability(returnId, true,0);
                         }
                     }
                     break;

@@ -1,12 +1,12 @@
 package org.example.models;
 
 public class User {
-    private int id;
+    private int userId;
     private String name;
     private String email;
 
-    public User(int id, String name, String email) {
-        this.id = id;
+    public User(int userId, String name, String email) {
+        this.userId = userId;
         this.name = name;
         this.email = email;
     }
@@ -18,7 +18,7 @@ public class User {
 
 
     public int getId() {
-        return id;
+        return userId;
     }
 
     public String getName() {
@@ -29,8 +29,8 @@ public class User {
         return email;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
     public void setName(String name) {

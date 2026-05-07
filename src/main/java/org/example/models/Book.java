@@ -7,6 +7,8 @@ public class Book {
     private String isbn;
     private boolean isAvailable;
     private String borrowedDate;
+    private int userId;
+    private String borrowedByUserName;
 
     public Book(int id, String title, String author, String isbn, boolean isAvailable,String borrowedDate) {
         this.id = id;
@@ -24,6 +26,22 @@ public class Book {
         this.isbn = isbn;
         this.isAvailable = isAvailable;
         this.borrowedDate = null;
+    }
+
+    public String getBorrowedByUserName() {
+        return borrowedByUserName;
+    }
+
+    public void setBorrowedByUserName(String borrowedByUserName) {
+        this.borrowedByUserName = borrowedByUserName;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
     public int getId() {

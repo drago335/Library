@@ -1,14 +1,11 @@
 package org.example.database;
 
-import java.sql.Statement;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.example.models.Book;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import org.example.models.User;
 import java.time.LocalDate;
 
 
@@ -56,7 +53,9 @@ public class BookDAO {
     }
     public List<Book> getAllBooks() {
         List<Book> books = new ArrayList<>();
-        String sql = "SELECT * FROM books";
+        String sql = "SELECT b.*, u.name AS user_name " +
+                "FROM books b " +
+                "LEFT JOIN users u ON b.user_id = u.id";
 
         try (Connection conn = DatabaseConfig.getConnection();
              Statement stmt = conn.createStatement();
@@ -70,8 +69,9 @@ public class BookDAO {
                         rs.getString("isbn"),
                         rs.getBoolean("isAvailable"),
                         rs.getString("borrowedDate")
-
                 );
+                book.setBorrowedByUserName(rs.getString("user_name"));
+                book.setUserId(rs.getInt("user_id"));
                 books.add(book);
             }
         } catch (SQLException e) {
@@ -115,20 +115,25 @@ public class BookDAO {
             System.out.println("❌ Edit error / Error during editing:" + e.getMessage());
         }
     }
-    public void updateBookAvailability(int id, boolean available) {
+    public void updateBookAvailability(int id, boolean available, int userId) {
         //Logic: If get book(available = false) , get today date
         //If return book(available = true ), date = null
         String dateStr = available ? null : LocalDate.now().toString();
 
-        String sql = "UPDATE books SET isAvailable = ?, borrowedDate = ? WHERE id = ?";
+        String sql = "UPDATE books SET isAvailable = ?, borrowedDate = ?, user_id = ? WHERE id = ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setBoolean(1, available);
             pstmt.setString(2, dateStr);
-            pstmt.setInt(3,id);
 
+            if(available){
+                pstmt.setNull(3, Types.INTEGER);
+            }else{
+                pstmt.setInt(3,userId);
+            }
+            pstmt.setInt(4,id);
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
                 String action = available ? "returned" : "borrowed";
