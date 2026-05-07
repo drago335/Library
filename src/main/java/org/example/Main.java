@@ -1,8 +1,10 @@
 package org.example;
 
+import org.example.database.UserDAO;
 import org.example.models.Book;
 import org.example.database.BookDAO;
 import org.example.database.DatabaseConfig;
+import org.example.models.User;
 
 import java.util.List;
 import java.util.Scanner;
@@ -11,6 +13,7 @@ public class Main {
     public static void main(String[] args) {
         DatabaseConfig.initializeDatabase();
         BookDAO bookDAO = new BookDAO();
+        UserDAO userDAO = new UserDAO();
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
 
@@ -25,7 +28,9 @@ public class Main {
             System.out.println("5. Editor");
             System.out.println("6. Borrow a book");
             System.out.println("7. Return a book");
-            System.out.println("8. Exit");
+            System.out.println("8.Register new user");
+            System.out.println("9.Show all user");
+            System.out.println("0. Exit");
             System.out.print("Your choice: ");
 
             if (!scanner.hasNextInt()) {
@@ -158,6 +163,22 @@ public class Main {
                     }
                     break;
                 case 8:
+                    System.out.print("Enter user name: ");
+                    String userName = scanner.nextLine();
+                    System.out.print("Enter user email: ");
+                    String userEmail = scanner.nextLine();
+
+                    User newUser = new User(userName, userEmail);
+                    userDAO.addUser(newUser);
+                    break;
+                case 9:
+                    List<User> users = userDAO.getAllUsers();
+                    System.out.println("\n--- Registered Users ---");
+                    for (User u : users) {
+                        System.out.println(u.getId() + ": " + u.getName() + " (" + u.getEmail() + ")");
+                    }
+                    break;
+                case 0:
                     running = false;
                     System.out.println("👋 Goodbye!");
                     break;
