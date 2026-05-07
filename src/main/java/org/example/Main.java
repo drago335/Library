@@ -3,6 +3,7 @@ package org.example;
 import org.example.models.Book;
 import org.example.database.BookDAO;
 import org.example.database.DatabaseConfig;
+
 import java.util.List;
 import java.util.Scanner;
 
@@ -40,17 +41,22 @@ public class Main {
                 case 1:
                     // THIS REMAINS: The logic for retrieving the list
                     List<Book> books = bookDAO.getAllBooks();
-                    System.out.println("\n--- НАЛИЧНИ КНИГИ ---");
+                    System.out.println("\n--- AVAILABLE BOOKS ---");
                     if (books.isEmpty()) {
-                        System.out.println("Няма намерени книги.");
+                        System.out.println("No found books.");
                     } else {
                         for (Book b : books) {
                             String statusText = b.isAvailable() ? "[Available]" : "[Borrowed]";
+
+                            String dateInfo = "";
+                            if (!b.isAvailable() && b.getBorrowedDate() != null) {
+                                dateInfo = " | Date: " + b.getBorrowedDate();
+                            }
                             System.out.println("ID: " + b.getId() +
-                                                " | " + b.getTitle() +
-                                                " - " + b.getAuthor() +
-                                                " | ISBN: " + b.getIsbn() +
-                                                " | Status: " + statusText);
+                                    " | " + b.getTitle() +
+                                    " - " + b.getAuthor() +
+                                    " | ISBN: " + b.getIsbn() +
+                                    " | Status: " + statusText + dateInfo);
                         }
                     }
                     break;
@@ -83,15 +89,15 @@ public class Main {
                     System.out.println("Enter a title or part of it to search: ");
                     String searchTerm = scanner.nextLine();
                     List<Book> foundBook = bookDAO.searchBookByTitle(searchTerm);
-                    if(searchTerm.isEmpty()) {
+                    if (searchTerm.isEmpty()) {
                         System.out.println("⚠️ Please enter a search term.");
                         break;
                     }
                     System.out.println("\n--- SEARCH RESULTS ---\n");
-                    if(foundBook.isEmpty()){
+                    if (foundBook.isEmpty()) {
                         System.out.println("No books found matching: " + searchTerm);
-                    }else{
-                        for(Book b : foundBook){
+                    } else {
+                        for (Book b : foundBook) {
                             System.out.println("ID: " + b.getId() + " | " + b.getTitle() + " (" +
                                     b.getAuthor() + ") ");
                         }
@@ -99,7 +105,7 @@ public class Main {
                     break;
                 case 5:
                     System.out.println("Enter the book ID to edit: ");
-                    if(scanner.hasNextInt()){
+                    if (scanner.hasNextInt()) {
                         int updateId = scanner.nextInt();
                         scanner.nextLine();
 
@@ -109,10 +115,11 @@ public class Main {
                         String newAuthor = scanner.nextLine();
 
                         bookDAO.updateBook(updateId, newTitle, newAuthor);
-                    }else {
+                    } else {
                         System.out.println("⚠ Invalid ID!");
                         scanner.next();
-                    }break;
+                    }
+                    break;
                 case 6:
                     System.out.print("Enter Book ID to borrow: ");
                     if (scanner.hasNextInt()) {

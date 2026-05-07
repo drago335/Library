@@ -2,12 +2,14 @@ package org.example.database;
 
 import java.sql.Statement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.example.models.Book;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDate;
 
 
 public class BookDAO {
@@ -66,7 +68,9 @@ public class BookDAO {
                         rs.getString("title"),
                         rs.getString("author"),
                         rs.getString("isbn"),
-                        rs.getBoolean("isAvailable")
+                        rs.getBoolean("isAvailable"),
+                        rs.getString("borrowedDate")
+
                 );
                 books.add(book);
             }
@@ -112,18 +116,27 @@ public class BookDAO {
         }
     }
     public void updateBookAvailability(int id, boolean available) {
-        String sql = "UPDATE books SET isAvailable = ? WHERE id = ?";
+        //Logic: If get book(available = false) , get today date
+        //If return book(available = true ), date = null
+        String dateStr = available ? null : LocalDate.now().toString();
+
+        String sql = "UPDATE books SET isAvailable = ?, borrowedDate = ? WHERE id = ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setBoolean(1, available);
-            pstmt.setInt(2, id);
+            pstmt.setString(2, dateStr);
+            pstmt.setInt(3,id);
 
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
                 String action = available ? "returned" : "borrowed";
-                System.out.println("✅ Book with ID " + id + " was successfully " + action + "!");
+                if(!available){
+                    System.out.println("✅ Book with ID " + id + " was successfully " + action + " on " + dateStr + "!");
+                }else {
+                    System.out.println("✅ Book with ID " + id + " was successfully " + action + "!");
+                }
             } else {
                 System.out.println("⚠️ No book found with ID " + id + ".");
             }
@@ -145,7 +158,8 @@ public class BookDAO {
                         rs.getString("title"),
                         rs.getString("author"),
                         rs.getString("isbn"),
-                        rs.getBoolean("isAvailable")
+                        rs.getBoolean("isAvailable"),
+                        rs.getString("borrowedDate")
                 );
             }
         } catch (SQLException e) {
