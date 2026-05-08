@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.example.models.Book;
+import org.example.models.BorrowRecord;
 import org.example.models.User;
 import java.time.LocalDate;
 
@@ -116,11 +117,8 @@ public class BookDAO {
         }
     }
     public void updateBookAvailability(int id, boolean available, int userId) {
-        //Logic: If get book(available = false) , get today date
-        //If return book(available = true ), date = null
-        String dateStr = available ? null : LocalDate.now().toString();
-
         String sql = "UPDATE books SET isAvailable = ?, borrowedDate = ?, user_id = ? WHERE id = ?";
+        String dateStr = available ? null : LocalDate.now().toString();
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -134,8 +132,22 @@ public class BookDAO {
                 pstmt.setInt(3,userId);
             }
             pstmt.setInt(4,id);
+
             int affectedRows = pstmt.executeUpdate();
+
             if (affectedRows > 0) {
+                String historySql = "INSERT INTO borrow_history (book_id, user_id, action_type, action_date) VALUES (?, ?, ?, ?)";
+                try(PreparedStatement hPstmt = conn.prepareStatement(historySql)){
+                    hPstmt.setInt(1,id);
+                    hPstmt.setInt(2,userId);
+
+                    hPstmt.setString(3, available ?"RETURN" : "BORROW");
+
+                    hPstmt.setString(4, LocalDate.now().toString());
+                    hPstmt.executeUpdate();
+                }
+                //--------------------------------------
+
                 String action = available ? "returned" : "borrowed";
                 if(!available){
                     System.out.println("✅ Book with ID " + id + " was successfully " + action + " on " + dateStr + "!");
@@ -148,6 +160,33 @@ public class BookDAO {
         } catch (SQLException e) {
             System.out.println("❌ Error updating status: " + e.getMessage());
         }
+    }
+    public List<BorrowRecord> getBorrowHistory() {
+        List<BorrowRecord> history = new ArrayList<>();
+
+        String sql = "SELECT h.id, b.title, u.name, h.action_type, h.action_date " +
+                "FROM borrow_history h " +
+                "JOIN books b ON h.book_id = b.id " +
+                "JOIN users u ON h.user_id = u.id " +
+                "ORDER BY h.id DESC";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                history.add(new BorrowRecord(
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("name"),
+                        rs.getString("action_type"),
+                        rs.getString("action_date")
+                ));
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Error reading history: " + e.getMessage());
+        }
+        return history;
     }
     public Book getBookById(int id) {
         String sql = "SELECT * FROM books WHERE id = ?";
