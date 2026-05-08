@@ -1,8 +1,11 @@
 package org.example;
 
+import org.example.database.UserDAO;
 import org.example.models.Book;
 import org.example.database.BookDAO;
 import org.example.database.DatabaseConfig;
+import org.example.models.BorrowRecord;
+import org.example.models.User;
 
 import java.util.List;
 import java.util.Scanner;
@@ -11,6 +14,7 @@ public class Main {
     public static void main(String[] args) {
         DatabaseConfig.initializeDatabase();
         BookDAO bookDAO = new BookDAO();
+        UserDAO userDAO = new UserDAO();
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
 
@@ -25,7 +29,10 @@ public class Main {
             System.out.println("5. Editor");
             System.out.println("6. Borrow a book");
             System.out.println("7. Return a book");
-            System.out.println("8. Exit");
+            System.out.println("8.Register new user");
+            System.out.println("9.Show all user");
+            System.out.println("10.Borrow History");
+            System.out.println("0. Exit");
             System.out.print("Your choice: ");
 
             if (!scanner.hasNextInt()) {
@@ -46,7 +53,9 @@ public class Main {
                         System.out.println("No found books.");
                     } else {
                         for (Book b : books) {
-                            String statusText = b.isAvailable() ? "[Available]" : "[Borrowed]";
+                            String borrowerName = b.getBorrowedByUserName();
+                            String statusText = b.isAvailable() ? "[Available]" : "[Borrowed] by User : " +
+                                    (borrowerName != null ? borrowerName : "Unknown User");
 
                             String dateInfo = "";
                             if (!b.isAvailable() && b.getBorrowedDate() != null) {
@@ -57,6 +66,7 @@ public class Main {
                                     " - " + b.getAuthor() +
                                     " | ISBN: " + b.getIsbn() +
                                     " | Status: " + statusText + dateInfo);
+
                         }
                     }
                     break;
@@ -88,11 +98,13 @@ public class Main {
                 case 4:
                     System.out.println("Enter a title or part of it to search: ");
                     String searchTerm = scanner.nextLine();
-                    List<Book> foundBook = bookDAO.searchBookByTitle(searchTerm);
-                    if (searchTerm.isEmpty()) {
+
+                    if (searchTerm.trim().isEmpty()) {
                         System.out.println("⚠️ Please enter a search term.");
                         break;
                     }
+                    List<Book> foundBook = bookDAO.searchBookByTitle(searchTerm);
+
                     System.out.println("\n--- SEARCH RESULTS ---\n");
                     if (foundBook.isEmpty()) {
                         System.out.println("No books found matching: " + searchTerm);
@@ -124,20 +136,24 @@ public class Main {
                     System.out.print("Enter Book ID to borrow: ");
                     if (scanner.hasNextInt()) {
                         int borrowId = scanner.nextInt();
-                        scanner.nextLine(); // Clear new row
+                        scanner.nextLine();
 
                         Book bookToBorrow = bookDAO.getBookById(borrowId);
 
                         if (bookToBorrow == null) {
-                            System.out.println("⚠️ No book found with ID " + borrowId + ".");
-                        }
-                        // 2. Проверяваме дали вече е заета
-                        else if (!bookToBorrow.isAvailable()) {
-                            System.out.println("❌ Съжаляваме, тази книга вече е заета!");
-                        }
-                        // 3. Ако е свободна, я заемаме
-                        else {
-                            bookDAO.updateBookAvailability(borrowId, false);
+                            System.out.println("⚠️ Book not found.");
+                        } else if (!bookToBorrow.isAvailable()) {
+                            System.out.println("❌ Book is already borrowed.");
+                        } else {
+
+                            System.out.print("Enter User ID: ");
+                            if (scanner.hasNextInt()) {
+                                int uId = scanner.nextInt();
+                                scanner.nextLine();
+
+
+                                bookDAO.updateBookAvailability(borrowId, false, uId);
+                            }
                         }
                     }
                     break;
@@ -151,18 +167,45 @@ public class Main {
                         if (bookToReturn == null) {
                             System.out.println("⚠️ No book found with ID " + returnId + ".");
                         } else if (bookToReturn.isAvailable()) {
-                            System.out.println("ℹ️ Тази книга вече е в библиотеката (не е била заемана).");
+                            System.out.println("ℹ️ This book is in library(book wasn't borrow).");
                         } else {
-                            bookDAO.updateBookAvailability(returnId, true);
+                            int  currentUserId = bookToReturn.getUserId();
+                            bookDAO.updateBookAvailability(returnId, true,currentUserId);
                         }
                     }
                     break;
                 case 8:
+                    System.out.print("Enter user name: ");
+                    String userName = scanner.nextLine();
+                    System.out.print("Enter user email: ");
+                    String userEmail = scanner.nextLine();
+
+                    User newUser = new User(userName, userEmail);
+                    userDAO.addUser(newUser);
+                    break;
+                case 9:
+                    List<User> users = userDAO.getAllUsers();
+                    System.out.println("\n--- Registered Users ---");
+                    for (User u : users) {
+                        System.out.println(u.getId() + ": " + u.getName() + " (" + u.getEmail() + ")");
+                    }
+                    break;
+                case 10:
+                    System.out.println("\n--- BOOK BORROW/RETURN HISTORY ---");
+                    List<BorrowRecord> records = bookDAO.getBorrowHistory();
+
+                    if(records.isEmpty()) {
+                        System.out.println("No history recorded yet.");
+                    }else{
+                        for(BorrowRecord record : records){
+                            System.out.println(record);
+                        }
+                    }
+                    break;
+                case 0:
                     running = false;
                     System.out.println("👋 Goodbye!");
                     break;
-
-
                 default:
                     System.out.println("⚠️ Invalid option / No such option.");
             }

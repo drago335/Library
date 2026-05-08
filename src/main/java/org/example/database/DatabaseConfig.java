@@ -24,14 +24,32 @@ public class DatabaseConfig {
                 "author TEXT NOT NULL," +
                 "isbn TEXT," +
                 "isAvailable INTEGER DEFAULT 1," +
-                "borrowedDate TEXT" +
+                "borrowedDate TEXT," +
+                "user_id INTEGER," +
+                "FOREIGN KEY (user_id) REFERENCES users(id)" +
                 ");";
 
+        String sqlUsers = "CREATE TABLE IF NOT EXISTS users (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "name TEXT NOT NULL," +
+                "email TEXT UNIQUE" +
+                ");";
 
+        String historyTable = "CREATE TABLE IF NOT EXISTS borrow_history (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "book_id INTEGER," +
+                "user_id INTEGER," +
+                "action_type TEXT," + //"BORROW or RETURN
+                "action_date TEXT," +
+                "FOREIGN KEY (book_id) REFERENCES books(id)," +
+                "FOREIGN KEY (user_id) REFERENCES users(id)" +
+                ");";
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
             stmt.execute(sql);
+            stmt.execute(sqlUsers);
+            stmt.execute(historyTable);
             System.out.println("✅ The database and table are ready!");
 
         } catch (SQLException e) {

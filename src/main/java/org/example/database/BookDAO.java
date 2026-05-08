@@ -1,14 +1,12 @@
 package org.example.database;
 
-import java.sql.Statement;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.example.models.Book;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import org.example.models.BorrowRecord;
+import org.example.models.User;
 import java.time.LocalDate;
 
 
@@ -56,7 +54,9 @@ public class BookDAO {
     }
     public List<Book> getAllBooks() {
         List<Book> books = new ArrayList<>();
-        String sql = "SELECT * FROM books";
+        String sql = "SELECT b.*, u.name AS user_name " +
+                "FROM books b " +
+                "LEFT JOIN users u ON b.user_id = u.id";
 
         try (Connection conn = DatabaseConfig.getConnection();
              Statement stmt = conn.createStatement();
@@ -70,8 +70,9 @@ public class BookDAO {
                         rs.getString("isbn"),
                         rs.getBoolean("isAvailable"),
                         rs.getString("borrowedDate")
-
                 );
+                book.setBorrowedByUserName(rs.getString("user_name"));
+                book.setUserId(rs.getInt("user_id"));
                 books.add(book);
             }
         } catch (SQLException e) {
@@ -115,22 +116,38 @@ public class BookDAO {
             System.out.println("❌ Edit error / Error during editing:" + e.getMessage());
         }
     }
-    public void updateBookAvailability(int id, boolean available) {
-        //Logic: If get book(available = false) , get today date
-        //If return book(available = true ), date = null
+    public void updateBookAvailability(int id, boolean available, int userId) {
+        String sql = "UPDATE books SET isAvailable = ?, borrowedDate = ?, user_id = ? WHERE id = ?";
         String dateStr = available ? null : LocalDate.now().toString();
-
-        String sql = "UPDATE books SET isAvailable = ?, borrowedDate = ? WHERE id = ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setBoolean(1, available);
             pstmt.setString(2, dateStr);
-            pstmt.setInt(3,id);
+
+            if(available){
+                pstmt.setNull(3, Types.INTEGER);
+            }else{
+                pstmt.setInt(3,userId);
+            }
+            pstmt.setInt(4,id);
 
             int affectedRows = pstmt.executeUpdate();
+
             if (affectedRows > 0) {
+                String historySql = "INSERT INTO borrow_history (book_id, user_id, action_type, action_date) VALUES (?, ?, ?, ?)";
+                try(PreparedStatement hPstmt = conn.prepareStatement(historySql)){
+                    hPstmt.setInt(1,id);
+                    hPstmt.setInt(2,userId);
+
+                    hPstmt.setString(3, available ?"RETURN" : "BORROW");
+
+                    hPstmt.setString(4, LocalDate.now().toString());
+                    hPstmt.executeUpdate();
+                }
+                //--------------------------------------
+
                 String action = available ? "returned" : "borrowed";
                 if(!available){
                     System.out.println("✅ Book with ID " + id + " was successfully " + action + " on " + dateStr + "!");
@@ -143,6 +160,33 @@ public class BookDAO {
         } catch (SQLException e) {
             System.out.println("❌ Error updating status: " + e.getMessage());
         }
+    }
+    public List<BorrowRecord> getBorrowHistory() {
+        List<BorrowRecord> history = new ArrayList<>();
+
+        String sql = "SELECT h.id, b.title, u.name, h.action_type, h.action_date " +
+                "FROM borrow_history h " +
+                "JOIN books b ON h.book_id = b.id " +
+                "JOIN users u ON h.user_id = u.id " +
+                "ORDER BY h.id DESC";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                history.add(new BorrowRecord(
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("name"),
+                        rs.getString("action_type"),
+                        rs.getString("action_date")
+                ));
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Error reading history: " + e.getMessage());
+        }
+        return history;
     }
     public Book getBookById(int id) {
         String sql = "SELECT * FROM books WHERE id = ?";
